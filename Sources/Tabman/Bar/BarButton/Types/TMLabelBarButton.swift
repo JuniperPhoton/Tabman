@@ -191,7 +191,6 @@ open class TMLabelBarButton: TMBarButton {
     
     open override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
-        
         UIView.performWithoutAnimation {
             update(for: selectionState)
         }
@@ -219,7 +218,7 @@ open class TMLabelBarButton: TMBarButton {
         let transitionColor = tintColor.interpolate(with: selectedTintColor,
                                                     percent: selectionState.rawValue)
         
-        label.textColor = transitionColor
+        label.textColor = transitionColor ?? .label
         
         // Because we can't animate nicely between fonts 😩
         // Cross dissolve on 'end' states between font properties.
