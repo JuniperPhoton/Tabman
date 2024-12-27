@@ -17,7 +17,7 @@ internal class AnimateableLabel: UIView {
         return textLayer.preferredFrameSize()
     }
     
-    private let textLayer = CATextLayer()
+    private var textLayer = CATextLayer()
     
     var text: String? {
         didSet {
@@ -25,27 +25,19 @@ internal class AnimateableLabel: UIView {
             invalidateIntrinsicContentSize()
         }
     }
-    var textColor: UIColor! {
-        get {
-            if let color = textLayer.foregroundColor {
-                return UIColor(cgColor: color)
-            }
-            return .black
-        }
-        set {
-            let textColor = newValue ?? .black
-            if #available(iOS 13, *) {
-                textLayer.foregroundColor = textColor.resolvedColor(with: traitCollection).cgColor
-            } else {
-                textLayer.foregroundColor = textColor.cgColor
-            }
+    
+    var textColor: UIColor = .label {
+        didSet {
+            updateLayerForegroundColor(textLayer)
         }
     }
+    
     var font: UIFont? {
         didSet {
             reloadTextLayerForCurrentFont()
         }
     }
+    
     var textAlignment: NSTextAlignment? {
         didSet {
             textLayer.alignmentMode = caTextLayerAlignmentMode(from: textAlignment) ?? .left
@@ -53,6 +45,7 @@ internal class AnimateableLabel: UIView {
     }
     
     private var _adjustsFontForContentSizeCategory = false
+    
     /// A Boolean that indicates whether the object automatically updates its font when the device's content size category changes.
     ///
     /// Defaults to `false`.
@@ -80,7 +73,6 @@ internal class AnimateableLabel: UIView {
     }
     
     private func commonInit() {
-        
         textLayer.truncationMode = .end
         textLayer.contentsScale = UIScreen.main.scale
         layer.addSublayer(textLayer)
@@ -96,9 +88,9 @@ internal class AnimateableLabel: UIView {
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         
-        guard traitCollection.preferredContentSizeCategory != previousTraitCollection?.preferredContentSizeCategory else {
-            return
-        }
+        // For CATextLayer, changing the foregroundColor after traitCollectionDidChange
+        // will have unexpected results. We need to recreate the layer to ensure the new foregroundColor is applied.
+        recreateLayer()
         reloadTextLayerForCurrentFont()
     }
     
@@ -111,9 +103,25 @@ internal class AnimateableLabel: UIView {
             textLayer.font = font
             textLayer.fontSize = font?.pointSize ?? 17.0
         }
+        
         invalidateIntrinsicContentSize()
         superview?.setNeedsLayout()
         superview?.layoutIfNeeded()
+    }
+    
+    private func recreateLayer() {
+        self.textLayer.removeFromSuperlayer()
+        
+        let textLayer = CATextLayer()
+        updateLayerForegroundColor(textLayer)
+        textLayer.alignmentMode = caTextLayerAlignmentMode(from: textAlignment) ?? .left
+        textLayer.string = text
+        self.textLayer = textLayer
+        commonInit()
+    }
+    
+    private func updateLayerForegroundColor(_ layer: CATextLayer) {
+        layer.foregroundColor = textColor.resolvedColor(with: traitCollection).cgColor
     }
 }
 

@@ -185,7 +185,7 @@ open class TMTabItemBarButton: TMBarButton {
         
         selectedImageView.alpha = selectionState.rawValue
         imageView.alpha = 1 - selectionState.rawValue
-        label.textColor = tintColor.interpolate(with: selectedTintColor, percent: selectionState.rawValue)
+        label.textColor = tintColor.interpolate(with: selectedTintColor, percent: selectionState.rawValue) ?? .label
         
         if shrinksImageWhenUnselected {
             let interpolatedScale = 1.0 - ((1.0 - selectionState.rawValue) * (1.0 - Defaults.shrunkenImageScale))
